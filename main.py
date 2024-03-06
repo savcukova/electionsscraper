@@ -23,7 +23,6 @@ def election_results(url):
         html = BeautifulSoup(response.text, "html.parser")
         return html.prettify()
 
-
 #ziskani mest
 def towns(html):
     towns = []
@@ -31,3 +30,17 @@ def towns(html):
     for town in elementy_obci:
         towns.append(town.text)
     return towns
+
+#ziskani odkazu pro dalsi detaily
+def get_links(html):
+    links = []
+    for link in html.select("td.cislo > a"):
+        links.append("https://volby.cz/pls/ps2017nss/" + link.a["href"])
+    return links
+
+#ziskani informaci o volbach
+def get_info(html):
+    data = []
+    for bunka in html.select("td[headers='sa2'], td[headers='sa3'], td[headers'sa6]"):
+        data.append(bunka.text)
+    return data
