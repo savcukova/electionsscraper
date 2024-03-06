@@ -20,30 +20,14 @@ def election_results(url):
         print("Couldn't load website.")
         return None
     elif response.status_code == 200:
-        soup = BeautifulSoup(response.text, "html.parser")
-        return soup.prettify()
+        html = BeautifulSoup(response.text, "html.parser")
+        return html.prettify()
 
-#najit tabulku s vysledky voleb
-def find_table(soup):
-    table = soup.find("table", {"class": "table"})
-    if not table:
-        print("Table not found.")
-        return None
-    else:
-        return table 
 
-def data_z_tabulky(table):
-    all_rows = table.find_all("tr")[2:]
-    data_election = []
-    
-    for row in all_rows:
-        data = row.find_all("td")
-        if len(data) >= 8:
-            obec_data = {
-                "kód obce": data[0].getText(),
-                "název obce": data[1].getText(),
-                "voliči v seznamu": data[2].getText(),
-                "vydané obálky": data[3].getText(),
-                "platné hlasy": data[4].getText(),
-            }
-        data_election.append(obec_data)
+#ziskani mest
+def towns(html):
+    towns = []
+    elementy_obci = html.select("td.overflow_name")
+    for town in elementy_obci:
+        towns.append(town.text)
+    return towns
