@@ -6,29 +6,44 @@ email: olinkasavcuk@gmail.com@gmail.com
 discord: savcukova
 """
 import csv
+import sys
 import requests
 from bs4 import BeautifulSoup
 
 url = ""
 output_file = ""
 
-def election_results(url, output_file):
+#ziskani dat z webove stranky
+def election_results(url):
     response = requests.get(url)
-    if response.status_code == 200:
+    if response.status_code != 200:
+        print("Couldn't load website.")
+        return None
+    elif response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
-        
-        table = soup.find("table", {"class": "table"})
+        return soup.prettify()
 
-        all_rows = table.find_all("tr")
-        
-        for row in all_rows:
-            td = row.find_all("td")
-            print(td) 
+#najit tabulku s vysledky voleb
+def find_table(soup):
+    table = soup.find("table", {"class": "table"})
+    if not table:
+        print("Table not found.")
+        return None
+    else:
+        return table 
+
+def data_z_tabulky(table):
+    all_rows = table.find_all("tr")[2:]
+    data_election = []
     
-
-        
-election_results("https://volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=12&xnumnuts=7103", "test")
-            
-    
-
-
+    for row in all_rows:
+        data = row.find_all("td")
+        if len(data) >= 8:
+            obec_data = {
+                "kód obce": data[0].getText(),
+                "název obce": data[1].getText(),
+                "voliči v seznamu": data[2].getText(),
+                "vydané obálky": data[3].getText(),
+                "platné hlasy": data[4].getText(),
+            }
+        data_election.append(obec_data)
