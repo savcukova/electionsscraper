@@ -45,3 +45,33 @@ def links():
             cesta.append("https://volby.cz/pls/ps2017nss/" + town.get("href"))
     return cesta
 
+#ZÍSKÁNÍ IDENTIFIKAČNÍCH ČÍSEL OBCÍ
+def id():
+    id_town = []
+    id = html_obsah.find_all("td", "cislo")
+    for i in id:
+        id_town.append(i.text)
+    return id_town
+
+#ZÍSKÁNÍ SEZNAMU STRAN
+def get_parties():
+    party = []
+    links = links()
+    for link in links:
+        html = get_html(link)
+        if html:
+            party_elements = html.find_all("td", "overflow_name")
+            for element in party_elements:
+                party.append(element.text)
+    return party
+
+#ZÍSKÁNÍ CELKOVÉHO POČTU VOLIČU, ÚČASTI A HLASŮ
+def get_sum():
+    cesta = links()
+    for cesta in cesta:
+        html_cesta = get_html(cesta)
+        if html_cesta:
+            volici = html_cesta.find("td", headers="sa2")
+            ucast = html_cesta.find("td", headers="sa3")
+            platne_hlasy = html_cesta.find("td", headers = "sa6")
+    return volici, ucast, platne_hlasy
