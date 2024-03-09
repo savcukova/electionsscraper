@@ -10,37 +10,20 @@ import sys
 import requests
 from bs4 import BeautifulSoup
 
-url = ""
-output_file = ""
-
-#ziskani dat z webove stranky
-def election_results(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        print("Couldn't load website.")
-        return None
-    elif response.status_code == 200:
+#ZÍSKÁNÍ DAT Z WEBOVÉ STRÁNKY - HOTOVO, FUNGUJE
+def get_html(odkaz):
+    response = requests.get(odkaz)
+    if response.status_code == 200:
         html = BeautifulSoup(response.text, "html.parser")
         return html.prettify()
+    else:
+        print(f"Couldn't get HTML from {odkaz}.")
+        return None
 
-#ziskani mest
-def towns(html):
-    towns = []
-    elementy_obci = html.select("td.overflow_name")
-    for town in elementy_obci:
-        towns.append(town.text)
-    return towns
+if len(sys.argv) == 3:
+    html_obsah = get_html(sys.argv[1])
+    output_file = sys.argv[2]
+else:
+    print("Nesprávný počet argumentů.")
+    quit()
 
-#ziskani odkazu pro dalsi detaily
-def get_links(html):
-    links = []
-    for link in html.select("td.cislo > a"):
-        links.append("https://volby.cz/pls/ps2017nss/" + link.a["href"])
-    return links
-
-#ziskani informaci o volbach
-def get_info(html):
-    data = []
-    for bunka in html.select("td[headers='sa2'], td[headers='sa3'], td[headers'sa6]"):
-        data.append(bunka.text)
-    return data
