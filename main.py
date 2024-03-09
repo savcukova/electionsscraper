@@ -70,23 +70,24 @@ volici = []
 ucast = []
 platne_hlasy = []
 
+
 def get_sum() -> None:
     cesta = links()
     for ces in cesta:
         html_cesta = requests.get(ces)
         html_ces = BeautifulSoup(html_cesta.text, "html.parser")
         
-        voter = html_ces.find_all("td", headers="sa2")
+        voter = html_ces.find_all("td", headers="t2sa2")
         for volic in voter:
             volic = volic.text
             volici.append(volic.replace('\xa0', ' '))
         
-        attend = html_ces.find_all("td", headers="sa3")
+        attend = html_ces.find_all("td", headers="t2sa3")
         for a in attend:
             a = a.text
             ucast.append(a.replace('\xa0', ' '))
         
-        votes = html_ces.find_all("td", heaers="sa6")
+        votes = html_ces.find_all("td", headers="t2sa6")
         for vote in votes:
             vote = vote.text
             platne_hlasy.append(vote.replace('\xa0', ' '))
@@ -131,7 +132,7 @@ def main(odkaz, soubor):
         for strana in strany:
             hlavicka.append(strana)
         
-        with open(soubor, "w", newline="") as file:
+        with open(soubor, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerow(hlavicka)
             writer.writerows(obsah)
@@ -141,6 +142,6 @@ def main(odkaz, soubor):
 
 
 if __name__ == "__main__":
-    html_obsah = sys.argv[1]
+    html_obsah = get_html(sys.argv[1])
     output_file = sys.argv[2]
     main(html_obsah, output_file)
