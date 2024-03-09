@@ -77,3 +77,15 @@ def get_sum():
             platne_hlasy = html_cesta.find("td", headers = "sa6").text
             sums.append(volici, ucast, platne_hlasy)
     return sums
+
+def votes():
+    all_links = links()
+    votes = []
+    for link in all_links:
+        html = get_html(link)
+        vote = html.find_all("td", "cislo", headers=["t1sb4", "t2sb4"])
+        vote_percentages = []
+        for percentage in vote_percentages:
+            vote_percentages.append(percentage.text + " %")
+        votes.append(vote_percentages)
+    return votes
