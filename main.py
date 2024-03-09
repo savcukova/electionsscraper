@@ -41,5 +41,7 @@ def links():
     link_elements = html_obsah.find_all("td", "cislo")
     for link in link_elements:
         town = link.find("a")
-        cesta.append("https://volby.cz/pls/ps2017nss/" + town.get("href"))
+        if town:
+            cesta.append("https://volby.cz/pls/ps2017nss/" + town.get("href"))
     return cesta
+
