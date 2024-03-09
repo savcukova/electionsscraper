@@ -17,7 +17,7 @@ def get_html(odkaz):
         html = BeautifulSoup(response.text, "html.parser")
         return html
     else:
-        print(f"Couldn't get HTML from {odkaz}.")
+        print(f"Nepodařilo se získat HTML z {odkaz}.")
         return None
 
 
@@ -28,25 +28,25 @@ else:
     print("Nesprávný počet argumentů.")
     quit()
 
-#ZÍSKÁNÍ SEZNAMU MĚST V OKRESE - HOTOVO
-def towns() -> list:
-    list_towns = []
-    town_elements = html_obsah.find_all("td", "overflow_name")
-    for town in town_elements:
-        list_towns.append(town.text)
-    return list_towns
 
-#ZÍSKÁNÍ ODKAZU PRO DALŠÍ DETAILY - HOTOVO
+def towns() -> list:
+    seznam_mest = []
+    prvky_mest = html_obsah.find_all("td", "overflow_name")
+    for mesto in prvky_mest:
+        seznam_mest.append(mesto.text)
+    return seznam_mest
+
+
 def links() -> list:
     cesta = []
-    link_elements = html_obsah.find_all("td", "cislo", "href")
+    link_elements = html_obsah.find_all("td", "cislo")
     for link in link_elements:
-        town = link.find.a["href"]
+        town = link.find("a")
         if town:
-            cesta.append(f"https://volby.cz/pls/ps2017nss/{town}")
+            cesta.append(f"https://volby.cz/pls/ps2017nss/{town.get('href')}")
     return cesta
 
-#ZÍSKÁNÍ IDENTIFIKAČNÍCH ČÍSEL OBCÍ - HOTOVO
+
 def id():
     id_town = []
     id = html_obsah.find_all("td", "cislo")
@@ -54,7 +54,7 @@ def id():
         id_town.append(i.text)
     return id_town
 
-#ZÍSKÁNÍ SEZNAMU STRAN - HOTOVO
+
 def get_parties():
     parties = []
     link_town = links()
@@ -66,7 +66,6 @@ def get_parties():
     return parties
 
 
-#ZÍSKÁNÍ CELKOVÉHO POČTU VOLIČU, ÚČASTI A HLASŮ - HOTOVO
 volici = []
 ucast = []
 platne_hlasy = []
@@ -92,7 +91,7 @@ def get_sum() -> None:
             vote = vote.text
             platne_hlasy.append(vote.replace('\xa0', ' '))
 
-# HOTOVO
+
 def voters() -> list:
     all_links = links()
     hlasy = []
@@ -105,7 +104,7 @@ def voters() -> list:
         hlasy.append(vote_percentages)
     return hlasy
 
-# HOTOVO
+
 def create_rows() -> list:
     radky = []
     get_sum()
@@ -123,7 +122,7 @@ def create_rows() -> list:
         radky.append(s + h)
     return radky
 
-# todo
+
 def main(odkaz, soubor):
     try:
         hlavicka = ['Kód obce', 'Název obce', 'Voliči v seznamu', 'Vydané obálky', 'Platné hlasy']
@@ -139,3 +138,9 @@ def main(odkaz, soubor):
     except IndexError:
         print("Nastala chyba.")
         quit()
+
+
+if __name__ == "__main__":
+    html_obsah = sys.argv[1]
+    output_file = sys.argv[2]
+    main(html_obsah, output_file)
