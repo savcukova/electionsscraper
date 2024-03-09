@@ -27,3 +27,19 @@ else:
     print("Nesprávný počet argumentů.")
     quit()
 
+#ZÍSKÁNÍ SEZNAMU MĚST V OKRESE - HOTOVO
+def towns():
+    list_towns = []
+    town_elements = html_obsah.find_all("td", "overflow_name")
+    for town in town_elements:
+        list_towns.append(town.text)
+    return list_towns
+
+#ZÍSKÁNÍ ODKAZU PRO DALŠÍ DETAILY
+def links():
+    cesta = []
+    link_elements = html_obsah.find_all("td", "cislo")
+    for link in link_elements:
+        town = link.find("a")
+        cesta.append("https://volby.cz/pls/ps2017nss/" + town.get("href"))
+    return cesta
