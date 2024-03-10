@@ -20,128 +20,129 @@ def get_html(odkaz):
         print(f"Nepodařilo se získat HTML z {odkaz}.")
         return None
 
-
-if len(sys.argv) == 3:
-    html_obsah = get_html(sys.argv[1])
-    output_file = sys.argv[2]
-else:
-    print("Nesprávný počet argumentů.")
-    quit()
-
-
-def towns() -> list:
-    seznam_mest = []
-    prvky_mest = html_obsah.find_all("td", "overflow_name")
-    for mesto in prvky_mest:
-        seznam_mest.append(mesto.text)
-    return seznam_mest
-
-
-def links() -> list:
-    cesta = []
-    link_elements = html_obsah.find_all("td", "cislo")
-    for link in link_elements:
-        town = link.find("a")
-        if town:
-            cesta.append(f"https://volby.cz/pls/ps2017nss/{town.get('href')}")
-    return cesta
-
-
-def id():
+def town_id():
+    #vraci list cisla obce
     id_town = []
-    id = html_obsah.find_all("td", "cislo")
-    for i in id:
-        id_town.append(i.text)
+    search_id = url_adress.find_all("td", "cislo")
+    for t in search_id:
+        id_town.append(t.text)
     return id_town
 
+def town_name():
+    #vraci list obci
+    towns = []
+    search_town = url_adress.find_all("td", "overflow_name")
+    for t in search_town:
+        towns.append(t.text)
+    return towns
+
+def town_link():
+    #vrací url adresu k ziskani dalsich informaci o jednotlivych obcich
+    link = []
+    town_detail = url_adress.find_all("td", "cislo", "href")
+    for t in town_detail:
+        t = t.a["href"]
+        link.append(f"https://volby.cz/pls/ps2017nss/{t}")
+    return link
 
 def get_parties():
+    #vrací list stran ktere v dane obci kandiduji
     parties = []
-    link_town = links()
-    htmls = requests.get(link_town[0])
-    html = BeautifulSoup(htmls.text, "html.parser")
-    one_party = html.find_all("td", "overflow_name")
-    for party in one_party:
-        parties.append(party.text)
+    town = town_link()
+    odkaz = requests.get(town[0])
+    town_odkaz = BeautifulSoup(odkaz.text, "html.parser")
+    party = town_odkaz.find_all("td", "overflow_name")
+    for p in party:
+        parties.append(p.text)
     return parties
 
+def get_registered_voters():
+    #vraci registrovane volice
+    link = town_link()
+    registered_voters = []
+    for l in link:
+        html_link = requests.get(l)
+        obec = BeautifulSoup(html_link.text, "html.parser")
+        registered = obec.find_all("td", headers="sa2")
+        for r in registered:
+            r = r.text
+            registered_voters.append(r.replace('\xa0', ' '))
+    return registered_voters
 
-volici = []
-ucast = []
-platne_hlasy = []
+def get_participated_voters():
+    #vrací celkovy pociet zucastnenych voliců
+    link = town_link()
+    participated_voters = []
+    for l in link:
+        html_link = requests.get(l)
+        obec = BeautifulSoup(html_link.text, "html.parser")
+        participated = obec.find_all("td", headers="sa3")
+        for p in participated:
+            p = p.text
+            participated_voters.append(p.replace('\xa0', ' '))
+    return participated_voters
 
+def get_valid_votes():
+    #vraci pocet platnych volicu
+    link = town_link()
+    valid_votes = []
+    for l in link:
+        html_link = requests.get(l)
+        obec = BeautifulSoup(html_link.text, "html.parser")
+        valid = obec.find_all("td", headers="sa6")
+        for v in valid:
+            v = v.text
+            valid_votes.append(v.replace('\xa0', ' '))
+    return valid_votes
 
-def get_sum() -> None:
-    cesta = links()
-    for ces in cesta:
-        html_cesta = requests.get(ces)
-        html_ces = BeautifulSoup(html_cesta.text, "html.parser")
-        
-        voter = html_ces.find_all("td", headers="t2sa2")
-        for volic in voter:
-            volic = volic.text
-            volici.append(volic.replace('\xa0', ' '))
-        
-        attend = html_ces.find_all("td", headers="t2sa3")
-        for a in attend:
-            a = a.text
-            ucast.append(a.replace('\xa0', ' '))
-        
-        votes = html_ces.find_all("td", headers="t2sa6")
-        for vote in votes:
-            vote = vote.text
-            platne_hlasy.append(vote.replace('\xa0', ' '))
+def get_party_votes():
+    #vraci list, kde pise kolik hlasu ziskala dana strana
+    link = town_link()
+    votes = []
+    for l in link:
+        vote_list = []
+        obec = get_html(l)
+        vote = obec.find_all("td", "cislo", headers=["t1sb3", "t2sb3"])
+        for v in vote:
+            vote_list.append(v.text)
+        votes.append(vote_list)
+    return votes
 
-
-def voters() -> list:
-    all_links = links()
-    hlasy = []
-    for link in all_links:
-        html = get_html(link)
-        vote = html.find_all("td", "cislo", headers=["t1sb4", "t2sb4"])
-        vote_percentages = []
-        for percentage in vote:
-            vote_percentages.append(percentage.text + " %")
-        hlasy.append(vote_percentages)
-    return hlasy
-
-
-def create_rows() -> list:
-    radky = []
-    get_sum()
-    mesta = towns()
-    id_obci = id()
-    hlasy = voters()
+def create_data():
+    slouceni = []
+    id = town_id()
+    town = town_name()
+    registered_voter = get_registered_voters()
+    participated_voter = get_participated_voters()
+    valid_voter = get_valid_votes()
+    sum_votes = get_party_votes()
     
-    zipped = zip(id_obci, mesta, volici, ucast, platne_hlasy)
+    zipped = zip(id, town, registered_voter, participated_voter, valid_voter)
+    temp_list = []
+    for i, t, r, p, v in zipped:
+        temp_list.append([i, t, r, p, v])
     
-    seznam = []
-    for i, m, v, u, p in zipped:
-        seznam.append([i, m, v, u, p])
-    slouceni = zip(seznam, hlasy)
-    for s, h in slouceni:
-        radky.append(s + h)
-    return radky
-
+    zip2 = zip(temp_list, sum_votes)
+    for t, s in zip2:
+        slouceni.append(t + s)
+    return slouceni
 
 def main(odkaz, soubor):
-    try:
-        hlavicka = ['Kód obce', 'Název obce', 'Voliči v seznamu', 'Vydané obálky', 'Platné hlasy']
-        obsah = create_rows()
-        strany = get_parties()
-        for strana in strany:
-            hlavicka.append(strana)
-        
-        with open(soubor, "w", newline="", encoding="utf-8") as file:
-            writer = csv.writer(file)
-            writer.writerow(hlavicka)
-            writer.writerows(obsah)
-    except IndexError:
-        print("Nastala chyba.")
-        quit()
+    headers = ['Číslo obce', 'Název obce', 'Voliči v seznamu', 'Vydané obálky', 'Platné hlasy']
+    main_data = create_data()
+    parties = get_parties()
+    for p in parties:
+        headers.append(p)
+    
+    with open(soubor, "w", encoding="UTF-8", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(headers)
+        writer.writerows(main_data)
 
-
-if __name__ == "__main__":
-    html_obsah = get_html(sys.argv[1])
+if __name__ == "__main__" and len(sys.argv) == 3:
+    url_adress = get_html(sys.argv[1])
     output_file = sys.argv[2]
-    main(html_obsah, output_file)
+    main(url_adress, output_file)
+else:
+    print("Špatný počet argumentů")
+    quit()
