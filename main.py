@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 
 
 def get_html(odkaz):
+    """Funkce načte HTML obsah z daného odkazu"""
     response = requests.get(odkaz)
     if response.status_code == 200:
         html = BeautifulSoup(response.text, "html.parser")
@@ -20,24 +21,36 @@ def get_html(odkaz):
         print(f"Nepodařilo se získat HTML z {odkaz}.")
         return None
 
-def town_id():
-    #vraci list cisla obce
+def town_id() -> list:
+    """
+    Funkce extrahuje čísla obcí z HTML obsahu
+    
+    Vrací seznam čísel obcí v listu
+    """
     id_town = []
     search_id = url_adress.find_all("td", "cislo")
     for t in search_id:
         id_town.append(t.text)
     return id_town
 
-def town_name():
-    #vraci list obci
+def town_name() -> list:
+    """
+    Funkce extrahuje názvy obcí z HTML obsahu
+    
+    Vrací seznam názvů obcí v listu
+    """
     towns = []
     search_town = url_adress.find_all("td", "overflow_name")
     for t in search_town:
         towns.append(t.text)
     return towns
 
-def town_link():
-    #vrací url adresu k ziskani dalsich informaci o jednotlivych obcich
+def town_link() -> list:
+    """
+    Extrahuje URL adresy pro získání dalších informací o každé obci
+    
+    Vrací seznam URL adres pro každou obec
+    """
     link = []
     town_detail = url_adress.find_all("td", "cislo", "href")
     for t in town_detail:
@@ -45,8 +58,12 @@ def town_link():
         link.append(f"https://volby.cz/pls/ps2017nss/{t}")
     return link
 
-def get_parties():
-    #vrací list stran ktere v dane obci kandiduji
+def get_parties() -> list:
+    """
+    Získá seznam stran kandidujících v dané obci
+    
+    Vrací seznam stran kandidujících v obci
+    """
     parties = []
     town = town_link()
     odkaz = requests.get(town[0])
@@ -56,8 +73,12 @@ def get_parties():
         parties.append(p.text)
     return parties
 
-def get_registered_voters():
-    #vraci registrovane volice
+def get_registered_voters() -> list:
+    """
+    Získá počet registrovaných voličů v obci
+
+    Vrací seznam počtu registrovaných voličů
+    """
     link = town_link()
     registered_voters = []
     for l in link:
@@ -69,8 +90,12 @@ def get_registered_voters():
             registered_voters.append(r.replace('\xa0', ' '))
     return registered_voters
 
-def get_participated_voters():
-    #vrací celkovy pociet zucastnenych voliců
+def get_participated_voters() -> list:
+    """
+    Funkce získá celkový počet zúčastněných voličů v obci
+    
+    Vrací seznam celkového počtu zúčastněných voličů
+    """
     link = town_link()
     participated_voters = []
     for l in link:
@@ -82,8 +107,12 @@ def get_participated_voters():
             participated_voters.append(p.replace('\xa0', ' '))
     return participated_voters
 
-def get_valid_votes():
-    #vraci pocet platnych volicu
+def get_valid_votes() -> list:
+    """
+    Získá počet platných hlasů v obci
+    
+    Vrací seznam počtu platných hlasů
+    """
     link = town_link()
     valid_votes = []
     for l in link:
@@ -95,8 +124,12 @@ def get_valid_votes():
             valid_votes.append(v.replace('\xa0', ' '))
     return valid_votes
 
-def get_party_votes():
-    #vraci list, kde pise kolik hlasu ziskala dana strana
+def get_party_votes() -> list:
+    """
+    Získá seznam, kde je uvedeno, kolik hlasů získala každá strana
+
+    Vrací seznam, který obsahuje počet hlasů získaných každou stranou 
+    """
     link = town_link()
     votes = []
     for l in link:
@@ -108,7 +141,12 @@ def get_party_votes():
         votes.append(vote_list)
     return votes
 
-def create_data():
+def create_data() -> list:
+    """
+    Vytvoří sloučená data obsahující informace o jednotlivých obcích a počtech hlasů jednotlivých stran
+    
+    Vrací seznam, který obsahuje sloučená data
+    """
     slouceni = []
     id = town_id()
     town = town_name()
@@ -127,7 +165,10 @@ def create_data():
         slouceni.append(t + s)
     return slouceni
 
-def main(odkaz, soubor):
+def main(odkaz, soubor) -> None:
+    """
+    Hlavní funkce, která zpracovává data a ukládá je do CSV souboru
+    """
     headers = ['Číslo obce', 'Název obce', 'Voliči v seznamu', 'Vydané obálky', 'Platné hlasy']
     main_data = create_data()
     parties = get_parties()
