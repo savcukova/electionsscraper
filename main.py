@@ -1,10 +1,3 @@
-"""
-projekt_3.py: třetí projekt do Engeto Online Python Akademie
-
-author: Olina Savčuková
-email: olinkasavcuk@gmail.com
-discord: savcukova
-"""
 import csv
 import sys
 import requests
